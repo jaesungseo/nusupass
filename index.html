@@ -952,7 +952,7 @@
             <div class="info-text">
               <!-- 🖊️ 이메일 수정 -->
               <strong>이메일</strong>
-              <span>your@email.com</span>
+              <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="522b3d272012373f333b3e7c313d3f">[email&#160;protected]</a></span>
             </div>
           </div>
           <div class="info-row">
@@ -1038,11 +1038,44 @@
   }, { threshold: 0.1 });
   reveals.forEach(el => observer.observe(el));
 
-  // 폼 제출
-  document.getElementById('contactForm').addEventListener('submit', function(e) {
+  // ✅ 구글시트 연동
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBgbA3SwdcI9J4U8JksdWuS0wildL3gb96Xf2QHcn2AazpgV6i4Sb6oCz_9lQfPOOJfg/exec';
+
+  document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    this.style.display = 'none';
-    document.getElementById('successMsg').style.display = 'block';
+
+    const btn = this.querySelector('.submit-btn');
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ 전송 중...';
+    btn.disabled = true;
+
+    // 체크박스 여러 개 수집
+    const types = [...this.querySelectorAll('input[name="type"]:checked')]
+      .map(el => el.value).join(', ');
+
+    const data = {
+      phone:     this.querySelector('[name="phone"]').value,
+      address:   this.querySelector('[name="address"]').value,
+      type:      types || '미선택',
+      insurance: this.querySelector('[name="insurance"]').value,
+      message:   this.querySelector('[name="message"]').value,
+    };
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      // no-cors 환경에서는 응답 확인 불가, 전송은 정상 처리됨
+      this.style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    } catch(err) {
+      alert('전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
   });
 </script>
 </body>
